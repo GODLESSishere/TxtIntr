@@ -1,34 +1,75 @@
 #include <iostream>
-#include <cmath> 
+#include <cmath>
+#include <stdexcept>
+#include <getopt.h>
 
-void calculateExponentiation() {
-    int choice;
-    std::cout << "Выберите операцию:\n";
-    std::cout << "1. e^x\n";
-    std::cout << "2. x^y\n";
-    std::cout << "Введите номер операции (1 или 2): ";
-    std::cin >> choice;
-
-    if (choice == 1) {
-        double x;
-        std::cout << "Введите значение x: ";
-        std::cin >> x;
-        double result = exp(x); // e^x
-        std::cout << "Результат e^" << x << " = " << result << std::endl;
-    } else if (choice == 2) {
-        double x, y;
-        std::cout << "Введите значение x: ";
-        std::cin >> x;
-        std::cout << "Введите значение y: ";
-        std::cin >> y;
-        double result = pow(x, y); // x^y
-        std::cout << "Результат " << x << "^" << y << " = " << result << std::endl;
-    } else {
-        std::cout << "Неверный выбор. Пожалуйста, выберите 1 или 2." << std::endl;
-    }
+double calculateExp(double x) {
+    return exp(x);
 }
 
-int main() {
-    calculateExponentiation();
+double calculatePower(double x, double y) {
+    return pow(x, y);
+}
+
+void printHelp() {
+    std::cout << "Использование:\n";
+    std::cout << "  -o, --operation <операция>  Выберите операцию (exp или power)\n";
+    std::cout << "  <операнды>                   Операнды для выбранной операции\n";
+}
+
+int main(int argc, char* argv[]) {
+    int opt;
+    int index;
+    std::string operation;
+
+    static struct option long_options[] = {
+        {"operation", required_argument, 0, 'o'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}
+    };
+
+    while ((opt = getopt_long(argc, argv, "ho:", long_options, &index)) != -1) {
+        switch (opt) {
+            case 'o':
+                operation = optarg;
+                break;
+            case 'h':
+                printHelp();
+                return 0;
+            default:
+                printHelp();
+                return 1;
+        }
+    }
+
+    if (operation.empty()) {
+        printHelp();
+        return 1;
+    }
+
+    if (operation == "exp" && argc - optind != 1) {
+        std::cerr << "Ошибка: Неправильное количество операндов для exp.\n";
+        return 1;
+    }
+
+    if (operation == "power" && argc - optind != 2) {
+        std::cerr << "Ошибка: Неправильное количество операндов для power.\n";
+        return 1;
+    }
+
+    if (operation == "exp") {
+        double x = std::stod(argv[optind]);
+        double result = calculateExp(x);
+        std::cout << "e^" << x << " = " << result << std::endl;
+    } else if (operation == "power") {
+        double x = std::stod(argv[optind]);
+        double y = std::stod(argv[optind + 1]);
+        double result = calculatePower(x, y);
+        std::cout << x << "^" << y << " = " << result << std::endl;
+    } else {
+        std::cerr << "Ошибка: Неизвестная операция.\n";
+        return 1;
+    }
+
     return 0;
 }
